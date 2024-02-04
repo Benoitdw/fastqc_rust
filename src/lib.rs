@@ -1,4 +1,4 @@
-use std::{result, vec};
+use std::vec;
 
 use fastq::{parse_path, Record};
 
@@ -22,7 +22,7 @@ impl Resume {
     }
 }
 
-pub fn parse_fastq(fastq_path: String) {
+pub fn parse_fastq(fastq_path: &String) {
     let mut resume = Resume::new();
     let result = parse_path(Some(fastq_path), |parser| {
         parser.each(|record| {
