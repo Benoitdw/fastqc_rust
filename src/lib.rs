@@ -3,6 +3,7 @@ use std::vec;
 use fastq::{parse_path, Record};
 
 struct Resume {
+    total_sequence: u32,
     raw_quality_count: Vec<Vec<u8>>,
     base_average_quality: Vec<f32>,
 }
@@ -10,6 +11,7 @@ struct Resume {
 impl Resume {
     fn new() -> Self {
         Self {
+            total_sequence: 0,
             raw_quality_count: Vec::new(),
             base_average_quality: Vec::new(),
         }
@@ -26,12 +28,12 @@ pub fn parse_fastq(fastq_path: &String) {
     let mut resume = Resume::new();
     let result = parse_path(Some(fastq_path), |parser| {
         parser.each(|record| {
+            resume.total_sequence += 1;
             record.qual().iter().enumerate().for_each(|(id, &qual)| {
                 match resume.raw_quality_count.get_mut(id) {
-                    Some(vector) => vector.push(qual),
-                    None => resume.raw_quality_count.push(vec![qual]),
+                    Some(vector) => vector.push(qual - 33), // -33 Because it's the value of !
+                    None => resume.raw_quality_count.push(vec![qual - 33]), // -33 Because it's the value of !
                 }
-                resume.raw_quality_count[id].push(qual)
             });
             true
         })
@@ -41,6 +43,7 @@ pub fn parse_fastq(fastq_path: &String) {
         Err(error) => println!("There was an error handling fastq. {:?}", error),
     };
     resume.compute_stats();
+    println!("Total sequence : {:?}", resume.total_sequence);
     println!(
         "Average quality:  {:?}",
         resume
